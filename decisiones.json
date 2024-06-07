@@ -1,27 +1,27 @@
 {
-  "pregunta": "¿Eres menor de edad?",
+  "pregunta": "Eres menor de edad?",
   "izquierda": {
-    "pregunta": "¿Vienes con un mayor de edad?",
+    "pregunta": "Vienes con un mayor de edad?",
     "izquierda": {
-      "pregunta": "¿Te gustan las atracciones emocionantes?",
+      "pregunta": "Te gustan las atracciones emocionantes?",
       "izquierda": { "identificadores": [1, 2, 3, 7, 9] },
       "derecha": { "identificadores": [4, 5, 6, 8, 10] }
     },
     "derecha": {
-      "pregunta": "¿Tu estatura es de mas de 1 metro y 30 centímetros?",
+      "pregunta": "Tu estatura es de mas de 1 metro y 30 centímetros?",
       "izquierda": { "identificadores": [1, 2, 9] },
       "derecha": { "identificadores": [3, 4, 5, 6, 7, 8, 10] }
     }
   },
   "derecha": {
-    "pregunta": "¿Vienes en grupo?",
+    "pregunta": "Vienes en grupo?",
     "izquierda": {
-      "pregunta": "¿Sufres de alguna enfermedad?",
+      "pregunta": "Sufres de alguna enfermedad?",
       "izquierda": { "identificadores": [4, 5, 6, 10] },
       "derecha": { "identificadores": [1, 2, 3, 7, 9, 8] }
     },
     "derecha": {
-      "pregunta": "¿Tienes miedo al terror?",
+      "pregunta": "Tienes miedo al terror?",
       "izquierda": { "identificadores": [1, 4, 5, 6, 7, 8, 9, 10] },
       "derecha": { "identificadores": [2, 3] }
     }
