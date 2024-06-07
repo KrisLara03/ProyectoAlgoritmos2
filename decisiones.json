@@ -8,7 +8,7 @@
       "derecha": { "identificadores": [4, 5, 6, 8, 10] }
     },
     "derecha": {
-      "pregunta": "¿Tu estatura es de más de 1 metro y 30 centímetros?",
+      "pregunta": "¿Tu estatura es de mas de 1 metro y 30 centímetros?",
       "izquierda": { "identificadores": [1, 2, 9] },
       "derecha": { "identificadores": [3, 4, 5, 6, 7, 8, 10] }
     }
