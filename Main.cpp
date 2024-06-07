@@ -55,8 +55,7 @@ void construirGrafo(Grafo& grafo, const std::string& archivoCSV) {
 
 Nodo* construirArbol(const json& j) {
     Nodo* nodo = new Nodo();
-    
-    // Verificar si la clave 'pregunta' existe en el objeto JSON
+
     if (j.contains("pregunta")) {
         nodo->pregunta = j["pregunta"];
     } else {
@@ -65,31 +64,27 @@ Nodo* construirArbol(const json& j) {
         return nullptr;
     }
 
-    // Verificar si la clave 'izquierda' existe en el objeto JSON
     if (j.contains("izquierda")) {
         nodo->izquierda = construirArbol(j["izquierda"]);
     } else {
         nodo->izquierda = nullptr;
     }
 
-    // Verificar si la clave 'derecha' existe en el objeto JSON
     if (j.contains("derecha")) {
         nodo->derecha = construirArbol(j["derecha"]);
     } else {
         nodo->derecha = nullptr;
     }
 
-    // Verificar si la clave 'identificadores' existe en el objeto JSON
     if (j.contains("identificadores")) {
-        // Convertir el valor a un vector de enteros y asignarlo a 'atracciones'
         nodo->atracciones = j["identificadores"].get<std::vector<int>>();
     } else {
-        // Si no existe 'identificadores', asignar un vector vacío a 'atracciones'
         nodo->atracciones = {};
     }
 
     return nodo;
 }
+
 Nodo* leerArbolDecisiones(const std::string& archivoJSON) {
     std::ifstream archivo(archivoJSON);
     if (!archivo.is_open()) {
@@ -97,9 +92,58 @@ Nodo* leerArbolDecisiones(const std::string& archivoJSON) {
         return nullptr;
     }
 
-    json j;
-    archivo >> j;
-    return construirArbol(j);
+    if (archivo.peek() == std::ifstream::traits_type::eof()) {
+        std::cerr << "Error: El archivo " << archivoJSON << " está vacío." << std::endl;
+        return nullptr;
+    }
+
+    try {
+        json j;
+        archivo >> j;
+        if (j.is_null() || j.empty()) {
+            std::cerr << "Error: El archivo " << archivoJSON << " contiene JSON inválido o vacío." << std::endl;
+            return nullptr;
+        }
+        return construirArbol(j);
+    } catch (const json::parse_error& e) {
+        std::cerr << "Error de parseo en el archivo " << archivoJSON << ": " << e.what() << std::endl;
+        return nullptr;
+    }
+}
+
+std::vector<Atraccion> leerAtracciones(const std::string& archivoJSON) {
+    std::vector<Atraccion> atracciones;
+    std::ifstream archivo(archivoJSON);
+    if (!archivo.is_open()) {
+        std::cerr << "Error: No se pudo abrir el archivo " << archivoJSON << std::endl;
+        return atracciones;
+    }
+
+    if (archivo.peek() == std::ifstream::traits_type::eof()) {
+        std::cerr << "Error: El archivo " << archivoJSON << " está vacío." << std::endl;
+        return atracciones;
+    }
+
+    try {
+        json j;
+        archivo >> j;
+        if (j.is_null() || j.empty()) {
+            std::cerr << "Error: El archivo " << archivoJSON << " contiene JSON inválido o vacío." << std::endl;
+            return atracciones;
+        }
+
+        for (const auto& entrada : j) {
+            Atraccion atraccion;
+            atraccion.id = entrada["id"];
+            atraccion.tiempoEspera = entrada["tiempoEspera"];
+            atraccion.nombre = entrada["nombre"];
+            atracciones.push_back(atraccion);
+        }
+    } catch (const json::parse_error& e) {
+        std::cerr << "Error de parseo en el archivo " << archivoJSON << ": " << e.what() << std::endl;
+    }
+
+    return atracciones;
 }
 
 //---------------------------------------------------
