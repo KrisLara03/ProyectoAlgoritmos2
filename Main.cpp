@@ -20,7 +20,7 @@ struct Nodo {
 
 // Estructura para la información de atracciones
 struct Atraccion {
-    int dentificador;
+    int identificador;
     std::string nombre;
     int tiempoEspera;
 };
@@ -137,7 +137,7 @@ std::vector<Atraccion> leerAtracciones(const std::string& archivoJSON) {
 
         for (const auto& entrada : j) {
             Atraccion atraccion;
-            atraccion.id = entrada["id"];
+            atraccion.identificador = entrada["identificador"];
             atraccion.tiempoEspera = entrada["tiempoEspera"];
             atraccion.nombre = entrada["nombre"];
             atracciones.push_back(atraccion);
@@ -155,15 +155,15 @@ std::vector<Atraccion> leerAtracciones(const std::string& archivoJSON) {
 
 void editarTiempoEspera(std::vector<Atraccion>& atracciones) {
     std::cout << "Ingrese el ID de la atracción a editar: ";
-    int id;
-    std::cin >> id;
+    int identificador;
+    std::cin >> identificador;
     
     std::cout << "Ingrese el nuevo tiempo de espera: ";
     int nuevoTiempo;
     std::cin >> nuevoTiempo;
     
     for (auto& atraccion : atracciones) {
-        if (atraccion.id == id) {
+        if (atraccion.identificador == identificador) {
             atraccion.tiempoEspera = nuevoTiempo;
             std::cout << "Tiempo de espera actualizado.\n";
             return;
@@ -226,9 +226,9 @@ void usarArbolDecisiones(Nodo* nodo, const std::vector<Atraccion>& atracciones) 
     if (!nodo->izquierda && !nodo->derecha) {
         // Nodo hoja, mostrar atracciones
         std::cout << "Atracciones sugeridas:\n";
-        for (int id : nodo->identificadores) {
+        for (int identificador : nodo->identificadores) {
             for (const auto& atraccion : atracciones) {
-                if (atraccion.id == id) {
+                if (atraccion.identificador == identificador) {
                     std::cout << "ID: " << atraccion.identificador << ", Nombre: " << atraccion.nombre << ", Tiempo de espera: " << atraccion.tiempoEspera << " minutos\n";
                 }
             }
@@ -239,7 +239,7 @@ void usarArbolDecisiones(Nodo* nodo, const std::vector<Atraccion>& atracciones) 
 //---------------------------------------------------
 
     // Hacer pregunta
-    std::cout << nodo->pregunta << " (1. Sí / 2. No): ";
+    std::cout << nodo->pregunta << " (1. Si / 2. No): ";
     int respuesta;
     std::cin >> respuesta;
     if (respuesta == 1) {
@@ -247,7 +247,7 @@ void usarArbolDecisiones(Nodo* nodo, const std::vector<Atraccion>& atracciones) 
     } else if (respuesta == 2) {
         usarArbolDecisiones(nodo->derecha, atracciones);
     } else {
-        std::cout << "Respuesta no válida. Intente de nuevo.\n";
+        std::cout << "Respuesta no valida. Intente de nuevo.\n";
         usarArbolDecisiones(nodo, atracciones);
     }
 }
@@ -257,21 +257,21 @@ void usarArbolDecisiones(Nodo* nodo, const std::vector<Atraccion>& atracciones) 
 // Seleccion manual de atracciones
 
 void seleccionManualDeAtracciones(const Grafo& grafo, const std::vector<Atraccion>& atracciones) {
-    std::cout << "Ingrese el ID de la atracción de inicio: ";
+    std::cout << "Ingrese el identificador de la atraccion de inicio: ";
     int inicio;
     std::cin >> inicio;
 
-    std::cout << "Ingrese los IDs de las atracciones a visitar (separados por espacios, termine con -1): ";
+    std::cout << "Ingrese los identificador de las atracciones a visitar (separados por espacios, termine con -1): ";
     std::vector<int> seleccionadas;
-    int id;
-    while (std::cin >> id && id != -1) {
-        seleccionadas.push_back(id);
+    int identificador;
+    while (std::cin >> identificador && identificador != -1) {
+        seleccionadas.push_back(identificador);
     }
 
     std::vector<int> distancias = dijkstra(grafo, inicio, seleccionadas);
-    std::cout << "Distancias desde la atracción de inicio:\n";
+    std::cout << "Distancias desde la atraccion de inicio:\n";
     for (int i = 0; i < seleccionadas.size(); ++i) {
-        std::cout << "ID: " << seleccionadas[i] << ", Distancia: " << distancias[seleccionadas[i]] << "\n";
+        std::cout << "identificador: " << seleccionadas[i] << ", Distancia: " << distancias[seleccionadas[i]] << "\n";
     }
 }
 
@@ -303,7 +303,7 @@ int main() {
                 salir = true;
                 break;
             default:
-                std::cout << "Opción no válida. Intente de nuevo.\n";
+                std::cout << "Opcion no valida. Intente de nuevo.\n";
                 break;
         }
     }
