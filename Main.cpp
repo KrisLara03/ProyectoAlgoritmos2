@@ -22,7 +22,7 @@ struct Nodo {
 struct Atraccion {
     int dentificador;
     std::string nombre;
-    int tiempoEspera;
+    int tiempo_espera;
 };
 
 //---------------------------------------------------
@@ -131,14 +131,14 @@ std::vector<Atraccion> leerAtracciones(const std::string& archivoJSON) {
         json j;
         archivo >> j;
         if (j.is_null() || j.empty()) {
-            std::cerr << "Error: El archivo " << archivoJSON << " contiene JSON inválido o vacío." << std::endl;
+            std::cerr << "Error: El archivo " << archivoJSON << " contiene JSON invalido o vacio." << std::endl;
             return atracciones;
         }
 
         for (const auto& entrada : j) {
             Atraccion atraccion;
             atraccion.id = entrada["id"];
-            atraccion.tiempoEspera = entrada["tiempoEspera"];
+            atraccion.tiempo_espera = entrada["tiempo_espera"];
             atraccion.nombre = entrada["nombre"];
             atracciones.push_back(atraccion);
         }
@@ -154,7 +154,7 @@ std::vector<Atraccion> leerAtracciones(const std::string& archivoJSON) {
 
 
 void editarTiempoEspera(std::vector<Atraccion>& atracciones) {
-    std::cout << "Ingrese el ID de la atracción a editar: ";
+    std::cout << "Ingrese el ID de la atraccion a editar: ";
     int id;
     std::cin >> id;
     
@@ -164,12 +164,12 @@ void editarTiempoEspera(std::vector<Atraccion>& atracciones) {
     
     for (auto& atraccion : atracciones) {
         if (atraccion.id == id) {
-            atraccion.tiempoEspera = nuevoTiempo;
+            atraccion.tiempo_espera = nuevoTiempo;
             std::cout << "Tiempo de espera actualizado.\n";
             return;
         }
     }
-    std::cout << "ID de atracción no encontrado.\n";
+    std::cout << "ID de atraccion no encontrado.\n";
 }
 
 //---------------------------------------------------
@@ -229,7 +229,7 @@ void usarArbolDecisiones(Nodo* nodo, const std::vector<Atraccion>& atracciones) 
         for (int id : nodo->identificadores) {
             for (const auto& atraccion : atracciones) {
                 if (atraccion.id == id) {
-                    std::cout << "ID: " << atraccion.identificador << ", Nombre: " << atraccion.nombre << ", Tiempo de espera: " << atraccion.tiempoEspera << " minutos\n";
+                    std::cout << "ID: " << atraccion.identificador << ", Nombre: " << atraccion.nombre << ", Tiempo de espera: " << atraccion.tiempo_espera << " minutos\n";
                 }
             }
         }
@@ -247,7 +247,7 @@ void usarArbolDecisiones(Nodo* nodo, const std::vector<Atraccion>& atracciones) 
     } else if (respuesta == 2) {
         usarArbolDecisiones(nodo->derecha, atracciones);
     } else {
-        std::cout << "Respuesta no válida. Intente de nuevo.\n";
+        std::cout << "Respuesta no valida. Intente de nuevo.\n";
         usarArbolDecisiones(nodo, atracciones);
     }
 }
@@ -257,7 +257,7 @@ void usarArbolDecisiones(Nodo* nodo, const std::vector<Atraccion>& atracciones) 
 // Seleccion manual de atracciones
 
 void seleccionManualDeAtracciones(const Grafo& grafo, const std::vector<Atraccion>& atracciones) {
-    std::cout << "Ingrese el ID de la atracción de inicio: ";
+    std::cout << "Ingrese el ID de la atraccion de inicio: ";
     int inicio;
     std::cin >> inicio;
 
@@ -269,7 +269,7 @@ void seleccionManualDeAtracciones(const Grafo& grafo, const std::vector<Atraccio
     }
 
     std::vector<int> distancias = dijkstra(grafo, inicio, seleccionadas);
-    std::cout << "Distancias desde la atracción de inicio:\n";
+    std::cout << "Distancias desde la atraccion de inicio:\n";
     for (int i = 0; i < seleccionadas.size(); ++i) {
         std::cout << "ID: " << seleccionadas[i] << ", Distancia: " << distancias[seleccionadas[i]] << "\n";
     }
@@ -303,7 +303,7 @@ int main() {
                 salir = true;
                 break;
             default:
-                std::cout << "Opción no válida. Intente de nuevo.\n";
+                std::cout << "Opcion no valida. Intente de nuevo.\n";
                 break;
         }
     }
