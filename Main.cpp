@@ -52,6 +52,7 @@ void construirGrafo(Grafo& grafo, const std::string& archivoCSV) {
 //---------------------------------------------------
 
 // Funciones para construir y manipular el Árbol de Decisiones
+// Aquí cambio
 
 Nodo* construirArbol(const json& j) {
     Nodo* nodo = new Nodo();
@@ -84,6 +85,8 @@ Nodo* construirArbol(const json& j) {
 
     return nodo;
 }
+
+//Aqui también
 
 Nodo* leerArbolDecisiones(const std::string& archivoJSON) {
     std::ifstream archivo(archivoJSON);
@@ -148,23 +151,6 @@ std::vector<Atraccion> leerAtracciones(const std::string& archivoJSON) {
 
 //---------------------------------------------------
 
-// Funciones para leer y editar la información de atracciones
-std::vector<Atraccion> leerAtracciones(const std::string& archivoJSON) {
-    std::vector<Atraccion> atracciones;
-    std::ifstream archivo(archivoJSON);
-    json j;
-    archivo >> j;
-
-    for (const auto& entrada : j) {
-        Atraccion atraccion;
-        atraccion.id = entrada["id"];
-        atraccion.tiempoEspera = entrada["tiempoEspera"];
-        atraccion.nombre = entrada["nombre"];
-        atracciones.push_back(atraccion);
-    }
-
-    return atracciones;
-}
 
 
 void editarTiempoEspera(std::vector<Atraccion>& atracciones) {
