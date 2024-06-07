@@ -22,7 +22,7 @@ struct Nodo {
 struct Atraccion {
     int identificador;
     std::string nombre;
-    int tiempoEspera;
+    int tiempo_espera;
 };
 
 //---------------------------------------------------
@@ -131,14 +131,19 @@ std::vector<Atraccion> leerAtracciones(const std::string& archivoJSON) {
         json j;
         archivo >> j;
         if (j.is_null() || j.empty()) {
-            std::cerr << "Error: El archivo " << archivoJSON << " contiene JSON inválido o vacío." << std::endl;
+            std::cerr << "Error: El archivo " << archivoJSON << " contiene JSON invalido o vacio." << std::endl;
             return atracciones;
         }
 
         for (const auto& entrada : j) {
             Atraccion atraccion;
+<<<<<<< HEAD
             atraccion.identificador = entrada["identificador"];
             atraccion.tiempoEspera = entrada["tiempoEspera"];
+=======
+            atraccion.id = entrada["id"];
+            atraccion.tiempo_espera = entrada["tiempo_espera"];
+>>>>>>> abdad5853177bfa1eb997b1fcb5c44b68b40fb1d
             atraccion.nombre = entrada["nombre"];
             atracciones.push_back(atraccion);
         }
@@ -154,22 +159,33 @@ std::vector<Atraccion> leerAtracciones(const std::string& archivoJSON) {
 
 
 void editarTiempoEspera(std::vector<Atraccion>& atracciones) {
+<<<<<<< HEAD
     std::cout << "Ingrese el ID de la atracción a editar: ";
     int identificador;
     std::cin >> identificador;
+=======
+    std::cout << "Ingrese el ID de la atraccion a editar: ";
+    int id;
+    std::cin >> id;
+>>>>>>> abdad5853177bfa1eb997b1fcb5c44b68b40fb1d
     
     std::cout << "Ingrese el nuevo tiempo de espera: ";
     int nuevoTiempo;
     std::cin >> nuevoTiempo;
     
     for (auto& atraccion : atracciones) {
+<<<<<<< HEAD
         if (atraccion.identificador == identificador) {
             atraccion.tiempoEspera = nuevoTiempo;
+=======
+        if (atraccion.id == id) {
+            atraccion.tiempo_espera = nuevoTiempo;
+>>>>>>> abdad5853177bfa1eb997b1fcb5c44b68b40fb1d
             std::cout << "Tiempo de espera actualizado.\n";
             return;
         }
     }
-    std::cout << "ID de atracción no encontrado.\n";
+    std::cout << "ID de atraccion no encontrado.\n";
 }
 
 //---------------------------------------------------
@@ -228,8 +244,13 @@ void usarArbolDecisiones(Nodo* nodo, const std::vector<Atraccion>& atracciones) 
         std::cout << "Atracciones sugeridas:\n";
         for (int identificador : nodo->identificadores) {
             for (const auto& atraccion : atracciones) {
+<<<<<<< HEAD
                 if (atraccion.identificador == identificador) {
                     std::cout << "ID: " << atraccion.identificador << ", Nombre: " << atraccion.nombre << ", Tiempo de espera: " << atraccion.tiempoEspera << " minutos\n";
+=======
+                if (atraccion.id == id) {
+                    std::cout << "ID: " << atraccion.identificador << ", Nombre: " << atraccion.nombre << ", Tiempo de espera: " << atraccion.tiempo_espera << " minutos\n";
+>>>>>>> abdad5853177bfa1eb997b1fcb5c44b68b40fb1d
                 }
             }
         }
@@ -257,7 +278,11 @@ void usarArbolDecisiones(Nodo* nodo, const std::vector<Atraccion>& atracciones) 
 // Seleccion manual de atracciones
 
 void seleccionManualDeAtracciones(const Grafo& grafo, const std::vector<Atraccion>& atracciones) {
+<<<<<<< HEAD
     std::cout << "Ingrese el identificador de la atraccion de inicio: ";
+=======
+    std::cout << "Ingrese el ID de la atraccion de inicio: ";
+>>>>>>> abdad5853177bfa1eb997b1fcb5c44b68b40fb1d
     int inicio;
     std::cin >> inicio;
 
