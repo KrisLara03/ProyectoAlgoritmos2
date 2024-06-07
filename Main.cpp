@@ -13,14 +13,14 @@ struct Nodo {
     std::string pregunta;
     Nodo* izquierda;
     Nodo* derecha;
-    std::vector<int> atracciones; // Solo en nodos hoja
+    std::vector<int> identificadores; // Solo en nodos hoja
 };
 
 //---------------------------------------------------
 
 // Estructura para la información de atracciones
 struct Atraccion {
-    int id;
+    int dentificador;
     std::string nombre;
     int tiempoEspera;
 };
@@ -78,9 +78,9 @@ Nodo* construirArbol(const json& j) {
     }
 
     if (j.contains("identificadores")) {
-        nodo->atracciones = j["identificadores"].get<std::vector<int>>();
+        nodo->identificadores = j["identificadores"].get<std::vector<int>>();
     } else {
-        nodo->atracciones = {};
+        nodo->identificadores = {};
     }
 
     return nodo;
@@ -96,7 +96,7 @@ Nodo* leerArbolDecisiones(const std::string& archivoJSON) {
     }
 
     if (archivo.peek() == std::ifstream::traits_type::eof()) {
-        std::cerr << "Error: El archivo " << archivoJSON << " está vacío." << std::endl;
+        std::cerr << "Error: El archivo " << archivoJSON << " esta vacio." << std::endl;
         return nullptr;
     }
 
@@ -104,7 +104,7 @@ Nodo* leerArbolDecisiones(const std::string& archivoJSON) {
         json j;
         archivo >> j;
         if (j.is_null() || j.empty()) {
-            std::cerr << "Error: El archivo " << archivoJSON << " contiene JSON inválido o vacío." << std::endl;
+            std::cerr << "Error: El archivo " << archivoJSON << " contiene JSON invalido o vacio." << std::endl;
             return nullptr;
         }
         return construirArbol(j);
@@ -209,11 +209,11 @@ std::vector<int> dijkstra(const Grafo& grafo, int inicio, const std::vector<int>
 
 // Función principal del menú de la aplicación
 void mostrarMenu() {
-    std::cout << "1. Usar el árbol de decisiones\n";
-    std::cout << "2. Selección manual de atracciones\n";
+    std::cout << "1. Usar el arbol de decisiones\n";
+    std::cout << "2. Seleccion manual de atracciones\n";
     std::cout << "3. Editar tiempo de espera\n";
     std::cout << "4. Salir\n";
-    std::cout << "Seleccione una opción: ";
+    std::cout << "Seleccione una opcion: ";
 }
 
 //---------------------------------------------------
@@ -226,10 +226,10 @@ void usarArbolDecisiones(Nodo* nodo, const std::vector<Atraccion>& atracciones) 
     if (!nodo->izquierda && !nodo->derecha) {
         // Nodo hoja, mostrar atracciones
         std::cout << "Atracciones sugeridas:\n";
-        for (int id : nodo->atracciones) {
+        for (int id : nodo->identificadores) {
             for (const auto& atraccion : atracciones) {
                 if (atraccion.id == id) {
-                    std::cout << "ID: " << atraccion.id << ", Nombre: " << atraccion.nombre << ", Tiempo de espera: " << atraccion.tiempoEspera << " minutos\n";
+                    std::cout << "ID: " << atraccion.identificador << ", Nombre: " << atraccion.nombre << ", Tiempo de espera: " << atraccion.tiempoEspera << " minutos\n";
                 }
             }
         }
