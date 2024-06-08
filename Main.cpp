@@ -1,3 +1,5 @@
+//g++ .\Main.cpp -o main.exe
+
 #include <iostream>
 #include <vector>
 #include <fstream>
@@ -34,85 +36,149 @@ struct Grafo {
 
 //---------------------------------------------------
 
-// Funciones para construir y manipular el Grafo
+// Función para construir el Grafo desde un archivo CSV
 void construirGrafo(Grafo& grafo, const std::string& archivoCSV) {
+    // Intentar abrir el archivo CSV
     std::ifstream archivo(archivoCSV);
+    if (!archivo.is_open()) {
+        std::cerr << "Error: No se pudo abrir el archivo " << archivoCSV << std::endl;
+        return;
+    }
+
+    // Verificar si el archivo está vacío
+    if (archivo.peek() == std::ifstream::traits_type::eof()) {
+        std::cerr << "Error: El archivo " << archivoCSV << " está vacío." << std::endl;
+        return;
+    }
+
     std::string linea;
+    int fila_numero = 0;
     while (std::getline(archivo, linea)) {
         std::vector<int> fila;
         std::stringstream ss(linea);
         std::string valor;
+        int columna_numero = 0;
         while (std::getline(ss, valor, ',')) {
-            fila.push_back(std::stoi(valor));
+            try {
+                // Intentar convertir el valor a entero
+                int num = std::stoi(valor);
+                fila.push_back(num);
+            } catch (const std::invalid_argument& e) {
+                std::cerr << "Error: Valor inválido en el archivo " << archivoCSV << " en la fila "
+                          << fila_numero + 1 << ", columna " << columna_numero + 1 << ". No es un entero." << std::endl;
+                return;
+            } catch (const std::out_of_range& e) {
+                std::cerr << "Error: Valor fuera de rango en el archivo " << archivoCSV << " en la fila "
+                          << fila_numero + 1 << ", columna " << columna_numero + 1 << "." << std::endl;
+                return;
+            }
+            ++columna_numero;
         }
         grafo.matrizAdyacencia.push_back(fila);
+        ++fila_numero;
     }
+
+    // Verificar si todas las filas tienen la misma longitud
+    std::size_t num_columnas = grafo.matrizAdyacencia[0].size();
+    for (const auto& fila : grafo.matrizAdyacencia) {
+        if (fila.size() != num_columnas) {
+            std::cerr << "Error: Inconsistencia en el número de columnas en el archivo " << archivoCSV << "." << std::endl;
+            return;
+        }
+    }
+
+    std::cout << "Grafo construido con exito desde el archivo " << archivoCSV << "." << std::endl;
 }
 
 //---------------------------------------------------
 
-// Funciones para construir y manipular el Árbol de Decisiones
-// Aquí cambio
-
+// Función auxiliar para construir el Árbol de Decisiones a partir de un objeto JSON
 Nodo* construirArbol(const json& j) {
+    // Imprimir el contenido del nodo actual para depuración
+    //std::cout << "Procesando nodo: " << j.dump(4) << std::endl;
+
     Nodo* nodo = new Nodo();
 
+    // Verificar y asignar la pregunta si está presente
     if (j.contains("pregunta")) {
         nodo->pregunta = j["pregunta"];
     } else {
-        std::cerr << "Error: Clave 'pregunta' no encontrada en el objeto JSON." << std::endl;
-        delete nodo;
-        return nullptr;
+        nodo->pregunta = ""; // Asignar una cadena vacía si no hay pregunta
     }
 
-    if (j.contains("izquierda")) {
+    // Verificar y asignar el nodo izquierdo si está presente
+    if (j.contains("izquierda") && j["izquierda"].is_object()) {
         nodo->izquierda = construirArbol(j["izquierda"]);
     } else {
         nodo->izquierda = nullptr;
     }
 
-    if (j.contains("derecha")) {
+    // Verificar y asignar el nodo derecho si está presente
+    if (j.contains("derecha") && j["derecha"].is_object()) {
         nodo->derecha = construirArbol(j["derecha"]);
     } else {
         nodo->derecha = nullptr;
     }
 
-    if (j.contains("identificadores")) {
+    // Verificar y asignar los identificadores si está presente
+    if (j.contains("identificadores") && j["identificadores"].is_array()) {
         nodo->identificadores = j["identificadores"].get<std::vector<int>>();
     } else {
-        nodo->identificadores = {};
+        nodo->identificadores = {}; // Asignar un vector vacío si no hay identificadores
     }
 
     return nodo;
 }
-
-//Aqui también
-
+// Función para leer y construir el Árbol de Decisiones a partir de un archivo JSON
 Nodo* leerArbolDecisiones(const std::string& archivoJSON) {
+    // Intentamos abrir el archivo
     std::ifstream archivo(archivoJSON);
     if (!archivo.is_open()) {
         std::cerr << "Error: No se pudo abrir el archivo " << archivoJSON << std::endl;
         return nullptr;
     }
 
+    // Verificamos si el archivo está vacío
     if (archivo.peek() == std::ifstream::traits_type::eof()) {
-        std::cerr << "Error: El archivo " << archivoJSON << " esta vacio." << std::endl;
+        std::cerr << "Error: El archivo " << archivoJSON << " está vacío." << std::endl;
         return nullptr;
     }
 
+    // Intentamos leer y parsear el contenido del archivo
     try {
         json j;
         archivo >> j;
+
+        // Verificamos si el JSON está vacío o es nulo
         if (j.is_null() || j.empty()) {
-            std::cerr << "Error: El archivo " << archivoJSON << " contiene JSON invalido o vacio." << std::endl;
+            std::cerr << "Error: El archivo " << archivoJSON << " contiene JSON inválido o vacío." << std::endl;
             return nullptr;
         }
+
+        // Construimos el árbol a partir del JSON
         return construirArbol(j);
+
     } catch (const json::parse_error& e) {
+        // Capturamos errores de parseo del JSON y mostramos un mensaje de error detallado
         std::cerr << "Error de parseo en el archivo " << archivoJSON << ": " << e.what() << std::endl;
+        return nullptr;
+    } catch (const std::exception& e) {
+        // Capturamos cualquier otra excepción y mostramos un mensaje de error
+        std::cerr << "Error desconocido al leer el archivo " << archivoJSON << ": " << e.what() << std::endl;
         return nullptr;
     }
 }
+
+// Función auxiliar para liberar la memoria del árbol de decisiones
+void liberarArbol(Nodo* nodo) {
+    if (nodo) {
+        liberarArbol(nodo->izquierda);
+        liberarArbol(nodo->derecha);
+        delete nodo;
+    }
+}
+
+//-----------------------------------------------------
 
 std::vector<Atraccion> leerAtracciones(const std::string& archivoJSON) {
     std::vector<Atraccion> atracciones;
@@ -122,21 +188,20 @@ std::vector<Atraccion> leerAtracciones(const std::string& archivoJSON) {
         return atracciones;
     }
 
-    if (archivo.peek() == std::ifstream::traits_type::eof()) {
-        std::cerr << "Error: El archivo " << archivoJSON << " está vacío." << std::endl;
-        return atracciones;
-    }
-
     try {
         json j;
         archivo >> j;
         if (j.is_null() || j.empty()) {
-            std::cerr << "Error: El archivo " << archivoJSON << " contiene JSON invalido o vacio." << std::endl;
+            std::cerr << "Error: El archivo " << archivoJSON << " contiene JSON inválido o vacío." << std::endl;
             return atracciones;
         }
 
         for (const auto& entrada : j) {
             Atraccion atraccion;
+            if (!entrada.contains("identificador") || !entrada.contains("nombre") || !entrada.contains("tiempo_espera")) {
+                std::cerr << "Error: Falta una clave requerida en una entrada de atracción en el archivo " << archivoJSON << std::endl;
+                continue; // Omitir esta entrada y pasar a la siguiente
+            }
             atraccion.identificador = entrada["identificador"];
             atraccion.tiempo_espera = entrada["tiempo_espera"];
             atraccion.nombre = entrada["nombre"];
@@ -154,7 +219,7 @@ std::vector<Atraccion> leerAtracciones(const std::string& archivoJSON) {
 
 
 void editarTiempoEspera(std::vector<Atraccion>& atracciones) {
-    std::cout << "Ingrese el ID de la atracción a editar: ";
+    std::cout << "Ingrese el identificador de la atracción a editar: ";
     int identificador;
     std::cin >> identificador;
     
@@ -169,7 +234,7 @@ void editarTiempoEspera(std::vector<Atraccion>& atracciones) {
             return;
         }
     }
-    std::cout << "ID de atraccion no encontrado.\n";
+    std::cout << "identificador de atraccion no encontrado.\n";
 }
 
 //---------------------------------------------------
@@ -282,7 +347,7 @@ int main() {
     Grafo grafo;
     construirGrafo(grafo, "grafo.csv");
     Nodo* arbolDecisiones = leerArbolDecisiones("decisiones.json");
-    std::vector<Atraccion> atracciones = leerAtracciones("atracciones.csv");
+    std::vector<Atraccion> atracciones = leerAtracciones("atracciones.json");
 
     bool salir = false;
     while (!salir) {
