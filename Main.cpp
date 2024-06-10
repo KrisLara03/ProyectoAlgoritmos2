@@ -77,7 +77,7 @@ void construirGrafo(Grafo& grafo, const std::string& archivoCSV) {
         }
     }
 
-    std::cout << "Grafo construido con éxito desde el archivo " << archivoCSV << "." << std::endl;
+    //std::cout << "Grafo construido con éxito desde el archivo " << archivoCSV << "." << std::endl;
 }
 
 //-----------------------------------------------------------
@@ -218,9 +218,26 @@ void editarTiempoEspera(std::vector<Atraccion>& atracciones) {
     std::cout << "Identificador de atracción no encontrado.\n";
 }
 
+void guardarTiempoEspera(const std::string& archivoJSON, const std::vector<Atraccion>& atracciones) {
+    std::ofstream archivo(archivoJSON);
+    if (!archivo.is_open()) {
+        std::cerr << "Error: No se pudo abrir el archivo " << archivoJSON << " para escribir." << std::endl;
+        return;
+    }
+    
+    json j;
+    for (const auto& atraccion : atracciones) {
+        j.push_back({
+            {"identificador", atraccion.identificador},
+            {"nombre", atraccion.nombre},
+            {"tiempo_espera", atraccion.tiempo_espera}
+        });
+    }
+    archivo << j.dump(4);
+}
 //-----------------------------------------------------------
-// Algoritmo de Dijkstra para encontrar la ruta más corta
-std::vector<int> dijkstra(const Grafo& grafo, int inicio, const std::vector<int>& atracciones) {
+
+std::vector<int> dijkstra(const Grafo& grafo, int inicio, const std::vector<Atraccion>& atracciones) {
     int n = grafo.matrizAdyacencia.size();
     std::vector<int> distancia(n, std::numeric_limits<int>::max());
     std::vector<bool> visitado(n, false);
@@ -241,8 +258,12 @@ std::vector<int> dijkstra(const Grafo& grafo, int inicio, const std::vector<int>
         visitado[min_indice] = true;
 
         for (int j = 0; j < n; j++) {
-            if (!visitado[j] && grafo.matrizAdyacencia[min_indice][j] && distancia[min_indice] != std::numeric_limits<int>::max() && distancia[min_indice] + grafo.matrizAdyacencia[min_indice][j] < distancia[j]) {
-                distancia[j] = distancia[min_indice] + grafo.matrizAdyacencia[min_indice][j];
+            if (!visitado[j] && grafo.matrizAdyacencia[min_indice][j] && distancia[min_indice] != std::numeric_limits<int>::max()) {
+                // Sumamos el tiempo de espera de la atracción actual al peso de la ruta
+                int peso_ruta = distancia[min_indice] + grafo.matrizAdyacencia[min_indice][j] + atracciones[j].tiempo_espera;
+                if (peso_ruta < distancia[j]) {
+                    distancia[j] = peso_ruta;
+                }
             }
         }
     }
@@ -253,6 +274,9 @@ std::vector<int> dijkstra(const Grafo& grafo, int inicio, const std::vector<int>
 //-------------------------------------------------------------
 // Función principal del menú de la aplicación
 void mostrarMenu() {
+    std::cout << "\n-----------------------------------------\n";
+    std::cout << "Bienvenido a C++ Kingdom\n";
+    std::cout << "\n-----------------------------------------\n";
     std::cout << "1. Usar el arbol de decisiones\n";
     std::cout << "2. Seleccion manual de atracciones\n";
     std::cout << "3. Editar tiempo de espera\n";
@@ -289,8 +313,8 @@ void usarArbolDecisiones(Nodo* nodo, const std::vector<Atraccion>& atracciones) 
 }
 
 //---------------------------------------------------------------
-// Seleccion manual de atracciones
 
+// Función para seleccionar manualmente las atracciones y encontrar la mejor ruta
 void seleccionManualDeAtracciones(const Grafo& grafo, const std::vector<Atraccion>& atracciones) {
     std::cout << "Lista de atracciones disponibles:\n";
     for (const auto& atraccion : atracciones) {
@@ -319,7 +343,7 @@ void seleccionManualDeAtracciones(const Grafo& grafo, const std::vector<Atraccio
         }
     }
 
-    std::vector<int> distancias = dijkstra(grafo, inicio, seleccionadas);
+    std::vector<int> distancias = dijkstra(grafo, inicio, atracciones);
     std::cout << "Distancias desde la atraccion de inicio:\n";
     for (int id : seleccionadas) {
         std::cout << "Identificador: " << id << ", Distancia: " << distancias[id] << "\n";
@@ -343,7 +367,7 @@ int main() {
         {9, "Torre de Caida Libre", 35},
         {10, "Cinema 4D de Aventuras", 40}
     };
-
+    guardarTiempoEspera("atracciones.json", atracciones);
     bool salir = false;
     while (!salir) {
         mostrarMenu();
