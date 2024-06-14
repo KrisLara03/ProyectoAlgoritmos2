@@ -1,4 +1,3 @@
-//g++ .\Main.cpp -o main.exe
 
 #include <iostream>
 #include <vector>
@@ -7,6 +6,8 @@
 #include "csv.h"
 #include <limits>
 #include <sstream> 
+#include <queue>
+#include <unordered_map>
 
 using json = nlohmann::json;
 
@@ -30,7 +31,7 @@ struct Grafo {
     std::vector<std::vector<int>> matrizAdyacencia;
 };
 
-// Función para construir el Grafo desde un archivo CSV
+// Función para construir el Grafo 
 void construirGrafo(Grafo& grafo, const std::string& archivoCSV) {
     std::ifstream archivo(archivoCSV);
     if (!archivo.is_open()) {
@@ -68,7 +69,7 @@ void construirGrafo(Grafo& grafo, const std::string& archivoCSV) {
         grafo.matrizAdyacencia.push_back(fila);
         ++fila_numero;
     }
-// Verificar si todas las filas tienen la misma longitud
+// Verificar matriz
     std::size_t num_columnas = grafo.matrizAdyacencia[0].size();
     for (const auto& fila : grafo.matrizAdyacencia) {
         if (fila.size() != num_columnas) {
@@ -82,31 +83,31 @@ void construirGrafo(Grafo& grafo, const std::string& archivoCSV) {
 
 //-----------------------------------------------------------
 
-// Función auxiliar para construir el Árbol de Decisiones a partir de un objeto JSON
+// Función para construir el Árbol de Decisiones 
 Nodo* construirArbol(const json& j) {
     Nodo* nodo = new Nodo();
 
-    // Verificar y asignar la pregunta si está presente
+    // Verificar pregunta
 
     if (j.contains("pregunta")) {
         nodo->pregunta = j["pregunta"];
     } else {
-        nodo->pregunta = ""; // Asignar una cadena vacía si no hay pregunta
+        nodo->pregunta = ""; 
     }
 
-// Verificar y asignar el nodo izquierdo si está presente
+// Verificar izquierda
     if (j.contains("izquierda") && j["izquierda"].is_object()) {
         nodo->izquierda = construirArbol(j["izquierda"]);
     } else {
         nodo->izquierda = nullptr;
     }
-// Verificar y asignar el nodo derecho si está presente
+// Verificar derecho 
     if (j.contains("derecha") && j["derecha"].is_object()) {
         nodo->derecha = construirArbol(j["derecha"]);
     } else {
         nodo->derecha = nullptr;
     }
-// Verificar y asignar los identificadores si está presente
+// Verificar identificadores 
     if (j.contains("identificadores") && j["identificadores"].is_array()) {
         nodo->identificadores = j["identificadores"].get<std::vector<int>>();
     } else {
@@ -116,7 +117,9 @@ Nodo* construirArbol(const json& j) {
     return nodo;
 }
 
-// Función para leer y construir el Árbol de Decisiones a partir de un archivo JSON
+//-----------------------------------------------------------
+
+// Función para leer el Árbol de Decisiones 
 Nodo* leerArbolDecisiones(const std::string& archivoJSON) {
     // Intentamos abrir el archivo
     std::ifstream archivo(archivoJSON);
@@ -162,6 +165,7 @@ void liberarArbol(Nodo* nodo) {
 
 //-----------------------------------------------------
 
+// Función para leer Atracciones
 
 std::vector<Atraccion> leerAtracciones(const std::string& archivoJSON) {
     std::vector<Atraccion> atracciones;
@@ -183,7 +187,7 @@ std::vector<Atraccion> leerAtracciones(const std::string& archivoJSON) {
             Atraccion atraccion;
             if (!entrada.contains("identificador") || !entrada.contains("nombre") || !entrada.contains("tiempo_espera")) {
                 std::cerr << "Error: Falta una clave requerida en una entrada de atracción en el archivo " << archivoJSON << std::endl;
-                continue;// Omitir esta entrada y pasar a la siguiente
+                continue;
             }
             atraccion.identificador = entrada["identificador"];
             atraccion.tiempo_espera = entrada["tiempo_espera"];
@@ -199,8 +203,9 @@ std::vector<Atraccion> leerAtracciones(const std::string& archivoJSON) {
 
 //--------------------------------------------------------
 
+// Función editarTiempoEspera
 void editarTiempoEspera(std::vector<Atraccion>& atracciones) {
-    std::cout << "Ingrese el identificador de la atracción a editar: ";
+    std::cout << "Ingrese el identificador de la atraccion a editar: ";
     int identificador;
     std::cin >> identificador;
     
@@ -215,9 +220,12 @@ void editarTiempoEspera(std::vector<Atraccion>& atracciones) {
             return;
         }
     }
-    std::cout << "Identificador de atracción no encontrado.\n";
+    std::cout << "Identificador de atraccion no encontrado.\n";
 }
 
+//--------------------------------------------------------
+
+// Función guardarTiempoEspera
 void guardarTiempoEspera(const std::string& archivoJSON, const std::vector<Atraccion>& atracciones) {
     std::ofstream archivo(archivoJSON);
     if (!archivo.is_open()) {
@@ -237,42 +245,56 @@ void guardarTiempoEspera(const std::string& archivoJSON, const std::vector<Atrac
 }
 //-----------------------------------------------------------
 
-std::vector<int> dijkstra(const Grafo& grafo, int inicio, const std::vector<Atraccion>& atracciones) {
+// Función para realizar el algoritmo de Dijkstra 
+std::pair<std::vector<int>, std::vector<int>> dijkstra(const Grafo& grafo, int inicio, const std::vector<int>& seleccionadas, const std::vector<Atraccion>& atracciones) {
     int n = grafo.matrizAdyacencia.size();
     std::vector<int> distancia(n, std::numeric_limits<int>::max());
-    std::vector<bool> visitado(n, false);
+    std::vector<int> previo(n, -1);
+    std::priority_queue<std::pair<int, int>, std::vector<std::pair<int, int>>, std::greater<std::pair<int, int>>> pq;
 
     distancia[inicio] = 0;
+    pq.push({0, inicio});
 
-    for (int i = 0; i < n - 1; ++i) {
-        int min_distancia = std::numeric_limits<int>::max();
-        int min_indice = -1;
+    while (!pq.empty()) {
+        int peso_actual = pq.top().first;
+        int u = pq.top().second;
+        pq.pop();
 
-        for (int j = 0; j < n; j++) {
-            if (!visitado[j] && distancia[j] <= min_distancia) {
-                min_distancia = distancia[j];
-                min_indice = j;
-            }
-        }
+        if (peso_actual > distancia[u]) continue;
 
-        visitado[min_indice] = true;
-
-        for (int j = 0; j < n; j++) {
-            if (!visitado[j] && grafo.matrizAdyacencia[min_indice][j] && distancia[min_indice] != std::numeric_limits<int>::max()) {
+        for (int v = 0; v < n; ++v) {
+            if (grafo.matrizAdyacencia[u][v] > 0) {
                 // Sumamos el tiempo de espera de la atracción actual al peso de la ruta
-                int peso_ruta = distancia[min_indice] + grafo.matrizAdyacencia[min_indice][j] + atracciones[j].tiempo_espera;
-                if (peso_ruta < distancia[j]) {
-                    distancia[j] = peso_ruta;
+                int peso_ruta = distancia[u] + grafo.matrizAdyacencia[u][v] + atracciones[v].tiempo_espera;
+                if (peso_ruta < distancia[v]) {
+                    distancia[v] = peso_ruta;
+                    previo[v] = u;
+                    pq.push({peso_ruta, v});
                 }
             }
         }
     }
 
-    return distancia;
+    // Reconstruir el camino más corto en términos de nodos visitados
+    std::vector<int> ruta_optima;
+    int destino;
+    for (int atraccion : seleccionadas) {
+        destino = atraccion - 1; 
+        while (destino != -1) {
+            ruta_optima.push_back(destino + 1); 
+            destino = previo[destino];
+        }
+        std::reverse(ruta_optima.begin(), ruta_optima.end());
+    }
+
+    return {distancia, ruta_optima};
 }
 
+
 //-------------------------------------------------------------
+
 // Función principal del menú de la aplicación
+
 void mostrarMenu() {
     std::cout << "\n-----------------------------------------\n";
     std::cout << "Bienvenido a C++ Kingdom\n";
@@ -281,12 +303,32 @@ void mostrarMenu() {
     std::cout << "2. Seleccion manual de atracciones\n";
     std::cout << "3. Editar tiempo de espera\n";
     std::cout << "4. Salir\n";
+    std::cout << "\n-----------------------------------------\n";
     std::cout << "Seleccione una opcion: ";
 }
-// Usar el árbol de decisiones -> Para la funcionalidad del arbol de desiciones
-void usarArbolDecisiones(Nodo* nodo, const std::vector<Atraccion>& atracciones) {
+
+//--------------------------------------------------------
+
+// Función para imprimir la ruta más eficiente
+
+void imprimirRuta(const std::vector<int>& ruta, const std::vector<Atraccion>& atracciones) {
+    std::cout << " \n";
+    std::cout << "La ruta mas eficiente para realizar la visita es:\n";
+    for (int i = 0; i < ruta.size(); ++i) {
+        int id = ruta[i];
+        if (id >= 1 && id <= atracciones.size()) {
+            std::cout << "- Atraccion " << atracciones[id - 1].identificador << ": " << atracciones[id - 1].nombre << "\n";
+        }
+    }
+}
+
+//--------------------------------------------------------
+
+// Usar el árbol de decisiones 
+
+void usarArbolDecisiones(Nodo* nodo, const std::vector<Atraccion>& atracciones, const Grafo& grafo) {
     if (!nodo->izquierda && !nodo->derecha) {
-        std::cout << "Atracciones sugeridas:\n";
+        std::cout << "\nAtracciones sugeridas:\n";
         for (int identificador : nodo->identificadores) {
             for (const auto& atraccion : atracciones) {
                 if (atraccion.identificador == identificador) {
@@ -294,27 +336,63 @@ void usarArbolDecisiones(Nodo* nodo, const std::vector<Atraccion>& atracciones) 
                 }
             }
         }
+
+        std::vector<int> seleccionadas;
+        for (int identificador : nodo->identificadores) {
+            seleccionadas.push_back(identificador);
+        }
+
+        std::cout << "\nCalculando la ruta mas eficiente...\n";
+
+        // Encontrar el índice en el vector de atracciones para el inicio (podría ser el primero de los identificadores sugeridos)
+        int inicio_indice = -1;
+        for (int i = 0; i < atracciones.size(); ++i) {
+            if (atracciones[i].identificador == nodo->identificadores[0]) {
+                inicio_indice = i;
+                break;
+            }
+        }
+
+        if (inicio_indice == -1) {
+            std::cerr << "Error: Identificador de atraccion de inicio no encontrado.\n";
+            return;
+        }
+
+        auto resultados_dijkstra = dijkstra(grafo, inicio_indice, seleccionadas, atracciones);
+        std::vector<int> distancias = resultados_dijkstra.first;
+        std::vector<int> predecesores = resultados_dijkstra.second;
+
+        // Imprimir las distancias mínimas a cada atracción seleccionada
+        std::cout << "\nDistancias desde la atraccion de inicio (" << atracciones[inicio_indice].nombre << "):\n";
+        for (int id : seleccionadas) {
+            std::cout << "Identificador: " << id << ", Distancia: " << distancias[id - 1] << " metros\n";
+        }
+
+        // Imprimir la ruta más eficiente
+        imprimirRuta(predecesores, atracciones);
+
         return;
     }
-//---------------------------------------------------
 
     // Hacer pregunta
     std::cout << nodo->pregunta << " (1. Si / 2. No): ";
     int respuesta;
     std::cin >> respuesta;
     if (respuesta == 1) {
-        usarArbolDecisiones(nodo->izquierda, atracciones);
+        usarArbolDecisiones(nodo->izquierda, atracciones, grafo);
     } else if (respuesta == 2) {
-        usarArbolDecisiones(nodo->derecha, atracciones);
+        usarArbolDecisiones(nodo->derecha, atracciones, grafo);
     } else {
         std::cout << "Respuesta no valida. Intente de nuevo.\n";
-        usarArbolDecisiones(nodo, atracciones);
+        usarArbolDecisiones(nodo, atracciones, grafo);
     }
 }
 
+
 //---------------------------------------------------------------
 
-// Función para seleccionar manualmente las atracciones y encontrar la mejor ruta
+// Función para seleccionar manualmente las atracciones 
+
 void seleccionManualDeAtracciones(const Grafo& grafo, const std::vector<Atraccion>& atracciones) {
     std::cout << "Lista de atracciones disponibles:\n";
     for (const auto& atraccion : atracciones) {
@@ -322,8 +400,22 @@ void seleccionManualDeAtracciones(const Grafo& grafo, const std::vector<Atraccio
     }
 
     std::cout << "Ingrese el identificador de la atraccion de inicio: ";
-    int inicio;
-    std::cin >> inicio;
+    int inicio_id;
+    std::cin >> inicio_id;
+
+    // Encontrar el índice en el vector de atracciones
+    int inicio_indice = -1;
+    for (int i = 0; i < atracciones.size(); ++i) {
+        if (atracciones[i].identificador == inicio_id) {
+            inicio_indice = i;
+            break;
+        }
+    }
+
+    if (inicio_indice == -1) {
+        std::cerr << "Error: Identificador de atraccion de inicio no encontrado.\n";
+        return;
+    }
 
     std::cout << "Ingrese los identificadores de las atracciones a visitar (separados por espacios) o 'todos' para visitar todas: ";
     std::vector<int> seleccionadas;
@@ -343,31 +435,30 @@ void seleccionManualDeAtracciones(const Grafo& grafo, const std::vector<Atraccio
         }
     }
 
-    std::vector<int> distancias = dijkstra(grafo, inicio, atracciones);
-    std::cout << "Distancias desde la atraccion de inicio:\n";
-    for (int id : seleccionadas) {
-        std::cout << "Identificador: " << id << ", Distancia: " << distancias[id] << "\n";
+    auto resultados_dijkstra = dijkstra(grafo, inicio_indice, seleccionadas, atracciones);
+    std::vector<int> distancias = resultados_dijkstra.first;
+    std::vector<int> predecesores = resultados_dijkstra.second;
+
+    // Imprimir las distancias mínimas a cada atracción seleccionada
+    std::cout << "  \n";
+    std::cout << "Distancias desde la atraccion de inicio (" << atracciones[inicio_indice].nombre << "):\n";
+    for (int i = 0; i < seleccionadas.size(); ++i) {
+        int id = seleccionadas[i];
+        std::cout << "Identificador: " << id << ", Distancia: " << distancias[id - 1] << " metros\n"; 
     }
+
+    // Imprimir la ruta más eficiente
+    imprimirRuta(predecesores, atracciones);
 }
+
 
 //--------------------------------------------------------
 int main() {
     Grafo grafo;
     construirGrafo(grafo, "grafo.csv");
     Nodo* arbolDecisiones = leerArbolDecisiones("decisiones.json");
-    std::vector<Atraccion> atracciones = {
-        {1, "Montana Rusa del Dragon", 15},
-        {2, "Carrusel Encantado", 20},
-        {3, "Tunel del Terror", 10},
-        {4, "Rueda de la Fortuna Gigante", 25},
-        {5, "Casa de los Espejos", 30},
-        {6, "Laberinto de Cristal", 20},
-        {7, "Barco Pirata", 15},
-        {8, "Tirolesa Aventurera", 10},
-        {9, "Torre de Caida Libre", 35},
-        {10, "Cinema 4D de Aventuras", 40}
-    };
-    guardarTiempoEspera("atracciones.json", atracciones);
+    std::vector<Atraccion> atracciones = leerAtracciones("atracciones.json");
+
     bool salir = false;
     while (!salir) {
         mostrarMenu();
@@ -375,13 +466,14 @@ int main() {
         std::cin >> opcion;
         switch (opcion) {
             case 1:
-                usarArbolDecisiones(arbolDecisiones, atracciones);
+                usarArbolDecisiones(arbolDecisiones, atracciones, grafo);
                 break;
             case 2:
                 seleccionManualDeAtracciones(grafo, atracciones);
                 break;
             case 3:
                 editarTiempoEspera(atracciones);
+                guardarTiempoEspera("atracciones.json", atracciones);
                 break;
             case 4:
                 salir = true;
@@ -392,6 +484,7 @@ int main() {
         }
     }
 
-    
+    liberarArbol(arbolDecisiones);
     return 0;
 }
+
